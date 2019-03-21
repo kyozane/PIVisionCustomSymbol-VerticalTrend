@@ -930,7 +930,7 @@ window.PIVisualization = window.PIVisualization || {};
         typeName: 'Verticaltrend',
         displayName: PV.ResourceStrings.TrendSymbol,
         datasourceBehavior: PV.Extensibility.Enums.DatasourceBehaviors.Multiple,
-        iconUrl: 'Images/chrome.trend.svg',
+        iconUrl: 'Images/chrome.verticaltrend.svg',
         loadConfig: loadConfig,
         getDefaultConfig: getDefaultConfig,
         themes: {
