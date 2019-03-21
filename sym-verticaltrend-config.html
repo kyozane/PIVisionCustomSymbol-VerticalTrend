@@ -1,0 +1,184 @@
+﻿<ul id="trend-config" kendo-panel-bar class="t-side-panel-bgcolor" style="font-size: 14px;">
+    <li class="k-state-active">
+        <span class="panel-bar-label-no-wrap">{{::res.TrendConfigValueScaleLimitsTitle}}</span>
+
+        <div style="width: 85%; margin: 10px 0 15px 18px;">
+            <pv-color-picker colorkeyword="{{::res.TrendConfigForegroundColorLabel}}"
+                            options="{ defaultPalette: 'grayscale', transparent: false }"
+                            ng-model="runtimeData.trendForegroundColor" ng-model-options="{ getterSetter: true }">
+            </pv-color-picker>
+
+            <pv-color-picker colorkeyword="{{::res.TrendConfigBackgroundColorLabel}}"
+                             options="{ defaultPalette: 'grayscale'}"
+                             ng-model="runtimeData.trendBackgroundColor" ng-model-options="{ getterSetter: true }">
+            </pv-color-picker>
+
+            <pv-number-format ng-model="config.FormatType" />
+        </div>
+
+        <div style="width: 85%; margin: 15px 0 15px 15px;">
+            &nbsp;{{::res.TrendConfigValueScalesNumberTitle}}<br />
+            <select ng-model="runtimeData.numberOfScales" ng-model-options="{ getterSetter: true }"
+                    class="config-option-list" style="margin-top: 10px;">
+                <option value="single">{{::res.TrendConfigValueScaleSingle}}</option>
+                <option value="multiple">{{::res.TrendConfigValueScaleMultiple}}</option>
+            </select>
+
+            <div style="margin-top: 10px;">
+                &nbsp;{{::res.TrendConfigValueScaleRangeLabel}}<br />
+                <select ng-model="runtimeData.trendValueScaleRange" ng-model-options="{ getterSetter: true }"
+                        class="config-option-list" style="margin-top: 10px;">
+                    <option value="autorange">{{::res.TrendConfigValueScaleAutorange}}</option>
+                    <option value="database">{{::res.TrendConfigValueScaleDatabase}}</option>
+                    <option value="custom" ng-if="!config.MultipleScales">{{::res.TrendConfigValueScaleCustom}}</option>
+                </select>
+
+                <label class="trend-config-value-scale-inverted"
+                       ng-if="runtimeData.trendValueScaleRange()!=='custom'">
+                    <input type="checkbox" class="c-config-checkbox"
+                           ng-model="runtimeData.trendValueScaleInverted"
+                           ng-model-options="{ getterSetter: true }">{{::res.TrendConfigValueScaleInverted}}<br />
+                </label>
+
+                <div ng-if="!config.MultipleScales && runtimeData.trendValueScaleRange()==='custom'">
+                    <div class="trend-config-limit-title">
+                        {{::res.TrendConfigValueScaleTop}}
+                        <input type="text" class="trend-config-numeric-input"
+                               ng-model="config.ValueScaleSetting.MaxValue"
+                               pv-decimal-format pv-validator="true" />
+                    </div>
+                    <div class="trend-config-limit-title">
+                        {{::res.TrendConfigValueScaleBottom}}
+                        <input type="text" class="trend-config-numeric-input"
+                               ng-model="config.ValueScaleSetting.MinValue"
+                               pv-decimal-format pv-validator="true" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </li>
+
+    <li class="k-state-active">
+        <span class="panel-bar-label-no-wrap">{{::res.TrendConfigTracesValueScaleTitle}}</span>
+        <div style="width: 85%; margin: 10px 0 15px 15px;">
+            <div class="trend-config-trace-list" tabindex="0" style="padding: 4px"
+                 ng-keydown="def.configure.onChangeTrace($event, runtimeData)">
+                <div ng-repeat="trace in runtimeData.traceList track by $index"
+                     ng-click="runtimeData.currentTrace = $index"
+                     ng-style="runtimeData.traceList.length > 1 && runtimeData.currentTrace === $index && { 'background-color' : '#d5d5d5' }"
+                     class="trend-config-trace-list-item"
+                     title="{{trace.path}}">{{trace.label}}</div>
+            </div>
+
+            <div class="c-button-default-container" style="padding: 4px 4px 0 4px; margin-top: 0; margin-bottom: 0" ng-if="runtimeData.traceList.length > 1">
+                <button type="button" class="c-primary-button trend-config-trace-arrange-button"
+                        ng-disabled="runtimeData.currentTrace === 0"
+                        ng-click="def.configure.moveTrace(this.$parent, 'up')">
+                    <span class="k-icon k-i-arrow-n"></span>
+                </button>
+                <button type="button" class="c-primary-button trend-config-trace-arrange-button"
+                        ng-disabled="runtimeData.currentTrace === runtimeData.traceList.length - 1"
+                        ng-click="def.configure.moveTrace(this.$parent, 'down')">
+                    <span class="k-icon k-i-arrow-s"></span>
+                </button>
+                <button type="button" class="c-primary-button trend-config-trace-arrange-button"
+                        ng-disabled="runtimeData.currentTrace === 0"
+                        ng-click="def.configure.moveTrace(this.$parent, 'top')">
+                    <span class="k-icon k-i-seek-n"></span>
+                </button>
+                <button type="button" class="c-primary-button trend-config-trace-arrange-button"
+                        ng-disabled="runtimeData.currentTrace === runtimeData.traceList.length - 1"
+                        ng-click="def.configure.moveTrace(this.$parent, 'bottom')">
+                    <span class="k-icon k-i-seek-s"></span>
+                </button>
+                <button type="button" class="c-primary-button trend-config-trace-arrange-button"
+                        ng-click="def.configure.deleteTrace(this.$parent)">
+                    <span class="k-icon k-delete"></span>
+                </button>
+            </div>
+
+            <div style="margin: 4px 0 0 4px;">
+                <pv-color-picker options="{ defaultPalette: 'trace', transparent: false }"
+                                 ng-model="runtimeData.traceColor" ng-model-options="{ getterSetter: true }">
+                </pv-color-picker>
+
+                <pv-slider keyword="res.WeightKeyword" min="0.7" max="4.7" step="0.5" ng-model="runtimeData.traceStrokeWidth" ng-model-options="{ getterSetter: true }" />
+
+                <div class="config-option-single-row">
+                    <div class="config-option-ie11-overflow-fix">
+                        <div class="config-label">{{::res.StyleKeyword}}</div>
+                        <select ng-model="runtimeData.traceStrokeStyle" ng-model-options="{ getterSetter: true }"
+                                class="config-option-list config-option-single-row-input"
+                                style="font-family:monospace,monospace; width: 90px; height: 20px; padding-left: 10px; font-weight: bold;">
+                            <option value="">⎯⎯⎯⎯⎯⎯⎯</option>
+                            <option value="2.5,2">‧ ‧ ‧ ‧ ‧</option>
+                            <option value="6,2">– – – –</option>
+                            <option value="14,2">— — — —</option>
+                            <option value="10,2, 2.5,2">— ‧ — ‧</option>
+                            <option value="20,2, 20, 2, 2.5,2">—— —— ‧</option>
+                        </select>
+                    </div>
+                </div>
+
+                <pv-number-format ng-model="runtimeData.traceFormatType" ng-model-options="{ getterSetter: true }" 
+                                  datatype="runtimeData.metaData[runtimeData.currentTrace].DataType" hasinherit="true" />
+            </div>
+
+            <div ng-if="config.MultipleScales" style="margin-top: 15px;">
+                &nbsp;{{::res.TrendConfigValueScaleRangeLabel}}<br />
+                <select ng-model="runtimeData.traceValueScaleRange" ng-model-options="{ getterSetter: true }"
+                        ng-change="runtimeData.traceValueScaleRange()==='custom' && scrollToBottom()"
+                        class="config-option-list" style="margin-top: 10px;">
+                    <option value="default">{{::res.TrendConfigValueScaleDefault}}</option>
+                    <option value="autorange">{{::res.TrendConfigValueScaleAutorange}}</option>
+                    <option value="database">{{::res.TrendConfigValueScaleDatabase}}</option>
+                    <option value="custom">{{::res.TrendConfigValueScaleCustom}}</option>
+                </select>
+
+                <label class="trend-config-value-scale-inverted"
+                       ng-if="runtimeData.traceValueScaleRange()==='autorange' || runtimeData.traceValueScaleRange()==='database'">
+                    <input type="checkbox" class="c-config-checkbox"
+                           ng-model="runtimeData.traceValueScaleInverted"
+                           ng-model-options="{ getterSetter: true }">{{::res.TrendConfigValueScaleInverted}}<br />
+                </label>
+
+                <div ng-if="runtimeData.traceValueScaleRange()==='custom'">
+                    <div class="trend-config-limit-title">
+                        {{::res.TrendConfigValueScaleTop}}
+                        <input type="text" class="trend-config-numeric-input"
+                               ng-model="config.TraceSettings[runtimeData.currentTrace].ValueScaleSetting.MaxValue"
+                               ng-if="!runtimeData.metaData[runtimeData.currentTrace].States"
+                               pv-decimal-format pv-validator="true" />
+                        <select ng-model="config.TraceSettings[runtimeData.currentTrace].ValueScaleSetting.MaxValue"
+                                ng-if="runtimeData.metaData[runtimeData.currentTrace].States"
+                                ng-options="label.Value as label.Name for label in runtimeData.metaData[runtimeData.currentTrace].States"
+                                class="trend-config-digital-state-list" />
+                    </div>
+                    <div class="trend-config-limit-title">
+                        {{::res.TrendConfigValueScaleBottom}}
+                        <input type="text" class="trend-config-numeric-input"
+                               ng-model="config.TraceSettings[runtimeData.currentTrace].ValueScaleSetting.MinValue"
+                               ng-if="!runtimeData.metaData[runtimeData.currentTrace].States"
+                               pv-decimal-format pv-validator="true" />
+                        <select ng-model="config.TraceSettings[runtimeData.currentTrace].ValueScaleSetting.MinValue"
+                                ng-if="runtimeData.metaData[runtimeData.currentTrace].States"
+                                ng-options="label.Value as label.Name for label in runtimeData.metaData[runtimeData.currentTrace].States"
+                                class="trend-config-digital-state-list" />
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </li>
+
+    <li ng-click="scrollToBottom()">
+        <span class="panel-bar-label-no-wrap">{{::res.TrendConfigResetHeaderTitle}}</span>
+        <div style="width: 85%; margin-top: 10px; margin-left:15px;">
+            {{::res.TrendConfigResetPrompt}}
+            <button class="c-primary-button" style="display: block; margin: 15px auto;" 
+                    ng-click="def.configure.reset(this.$parent)">
+                {{::res.TrendConfigResetButtonText}}
+            </button>
+        </div>
+    </li>
+</ul>

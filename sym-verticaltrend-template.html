@@ -1,0 +1,176 @@
+﻿<style>
+#container_2 {
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    transform: rotate(90deg);
+}
+</style>
+
+<div class="trend-container t-trend-background"
+     ng-class="{'trend-text-no-select':legendResizer.showScrollbars || gesturing, 'trend-panning':panning}" 
+     style="position:relative" 
+     ng-style="{ 'background-color' : config.BackgroundColor }" 
+     ng-mousemove="onMouseMove($event)" 
+     ng-mouseup="onMouseUp($event)"
+     ng-mouseenter="onMouseEnter($event)"
+     ng-mouseleave="onMouseLeave($event)"
+     data-handles-own-touch="true"
+     id="container_2">
+
+    <svg xmlns="http://www.w3.org/2000/svg" class="trend" style="display:block; overflow:visible"
+         ng-attr-height="{{trendModel.height()}}" ng-attr-width="{{trendModel.plotRight() + trendModel.config.padding}}">
+
+        <defs>  
+            <clipPath ng-attr-id="{{'trace-clip-' + $id}}">
+                <rect x="0" y="0" ng-attr-width="{{trendModel.plotRight() + trendModel.config.padding}}" ng-attr-height="{{trendModel.height()}}" />
+            </clipPath>
+        </defs>
+
+        <g class="trend-gesture-root trend-gesture-target">
+
+            <rect x="0" y="0" class="t-trend-background" ng-style="{fill : config.BackgroundColor}" width="100%" height="100%"></rect>
+
+            <g class="timescale" ng-class="['timescale-' + trendModel.timeScale.style]">
+                <path ng-hide="gesturing" ng-attr-d="{{trendModel.timeScale.ticks}}" ng-style="{ stroke: config.TextColor }" ></path>
+                <text ng-repeat="label in trendModel.timeScale.labels track by $index" 
+                      ng-style="{ fill: config.TextColor }"
+                      ng-attr-x="{{label.x}}" ng-attr-y="{{label.y}}" ng-bind="label.value">
+                </text>
+            </g>
+
+            <g class="plot-area">
+                <rect class="plot-area-rect" x="0" y="0" ng-attr-height="{{trendModel.plotBottom()}}" width="100%" fill-opacity="0"></rect>
+                    
+                <g class="bands">
+                    <rect stroke-width="0" ng-style="{ fill: bandingColor }" 
+                          ng-repeat="band in trendModel.bands track by $index"
+                          ng-attr-x="{{band.x}}" ng-attr-y="{{band.y}}" ng-attr-height="{{band.height}}" ng-attr-width="{{band.width}}"></rect>
+                </g>
+
+                <path class="primary-scale" ng-style="{stroke: config.TextColor || 'currentColor'}" ng-attr-d="M{{::trendModel.plotLeft()}} {{::trendModel.plotTop()}} l5 0"></path>
+
+                <g ng-attr-clip-path="{{'url(#trace-clip-' + $id +')'}}">
+                    <g class="traces" ng-class="{'highlighting': trendModel.highlighting}" ng-attr-transform="{{trendModel.tracesTransform}}">
+                        <g class="trace"
+                           ng-repeat="trace in trendModel.traces track by $index"
+                           ng-class="traceClasses(trace)"
+                           ng-style="{ color: traceProperty('Color', trace.traceIndex) }">
+                            
+                            <path class="trace-line"
+                                  ng-attr-d="{{trace.line}}"
+                                  ng-attr-stroke-width="{{traceWidth(trace.traceIndex)}}"
+                                  ng-attr-stroke-dasharray="{{traceProperty('StrokeStyle', trace.traceIndex)}}">
+                            </path>
+                            <path class="update-indicator"
+                                  ng-class="traceMarkerClass(trace)"
+                                  ng-if="trace.updating && trace.updateIndicator != null"
+                                  ng-attr-d="{{traceMarkerPath(trace)}}"
+                                  ng-attr-transform="translate({{trace.updateIndicator.x}},{{trace.updateIndicator.y}}) scale(0.5)"></path>
+                            <path ng-repeat="mark in trace.errorMarkers track by $index" d="M-2 -2 L2 2 M2 -2 L-2 2" ng-attr-transform="translate({{mark.x}},{{mark.y}})"></path>
+                        </g>
+                    </g>
+                </g>
+
+                <g class="primary-scale" ng-style="{ color: config.TextColor }">
+                    <path style="stroke: currentColor" ng-attr-d="{{trendModel.valueScales[0].ticks}}"></path>
+                    <path style="stroke: currentColor" 
+                          ng-if="trendModel.nowline != trendModel.plotLeft()"
+                          ng-attr-d="M{{::trendModel.plotLeft()}} {{::trendModel.plotTop()}} l0 {{trendModel.plotHeight()}}"></path>
+                    <g ng-class="traceColor(trendModel.valueScales[0].palIndex)" 
+                       ng-style="{ color: config.MultipleScales && trendModel.traces.length > 1 ? traceProperty('Color', trendModel.valueScales[0].traceIndex) : null }">
+                        <text ng-repeat="label in trendModel.valueScales[0].labels track by $index"
+                              style="fill: currentColor;" 
+                              ng-attr-x="{{label.x}}" ng-attr-y="{{label.y}}" ng-bind="label.value">
+                        </text>
+                    </g>
+                </g>
+
+                <g ng-attr-clip-path="{{'url(#trace-clip-' + $id +')'}}">
+                    <g ng-repeat="scale in trendModel.valueScales" ng-if="$index > 0" ng-class="traceColor(scale.palIndex)" ng-style="{ color: traceProperty('Color', scale.traceIndex) }">
+                        <text style="fill: currentColor;" ng-repeat="label in scale.labels track by $index"
+                              ng-attr-x="{{label.x}}" ng-attr-y="{{label.y}}" ng-bind="label.value">
+                        </text>
+                    </g>
+
+                    <g ng-if="trendModel.nowline >= trendModel.plotLeft()" ng-attr-transform="{{trendModel.tracesTransform}}">
+                        <line class="now-line running" ng-style="{ stroke: config.TextColor }"
+                              ng-attr-y1="{{::trendModel.plotTop()}}" ng-attr-x1="{{trendModel.nowline}}" ng-attr-y2="{{trendModel.plotBottom()}}" ng-attr-x2="{{trendModel.nowline}}" />
+                        <path class="primary-scale" ng-style="{ stroke: config.TextColor, fill: config.TextColor }"
+                              ng-attr-transform="translate({{trendModel.nowline}}, {{trendModel.plotBottom()}})" d="M-2 -3 l3.5 2 l-3.5 2"></path>
+                    </g>
+
+                    <g class="root-cause" ng-if="trendModel.rootcause > 0">
+                        <line y1="0" ng-attr-x1="{{trendModel.rootcause}}" ng-attr-y2="{{trendModel.plotHeight() - 10}}" ng-attr-x2="{{trendModel.rootcause}}" />
+                    </g>
+                </g>
+
+                <rect ng-class="::['trend-pan-area', 'trend-gesture-target']" 
+                      ng-if="!layoutMode && trendModel.plotHeight() >= 100 && runtimeData.options.timeRangeChange"
+                      ng-attr-transform="translate(0, {{trendModel.plotHeight() - (44 - trendModel.config.padding)}})" 
+                      ng-attr-x="{{trendModel.config.padding}}" ng-attr-width="{{trendModel.plotWidth()}}" height="44px" width="100%" fill-opacity="0"></rect>
+            </g>
+
+            <g ng-class="::['trend-cursor', 'trend-gesture-target']" 
+               ng-if="cursor.pos > trendModel.plotLeft()" 
+               ng-attr-transform="translate({{cursor.pos}},{{::trendModel.plotTop()}})">  
+                              
+                <rect ng-style="{ stroke: config.TextColor }" ng-attr-x="{{cursor.touchX}}" y="-12" ng-attr-width="{{::cursor.touchWidth}}" ng-attr-height="{{trendModel.plotHeight() + 12}}"></rect>
+                <line ng-style="{ stroke: config.TextColor }" ng-attr-y2="{{trendModel.plotHeight()}}"></line>
+                <g class="trend-cursor-time" ng-attr-transform="translate({{cursor.timeX}},-12)">                    
+                    <rect ng-attr-width="{{::cursor.timeWidth+10}}" x="-5" ng-attr-height="{{trendModel.plotHeight()+13}}" style="fill:none;stroke:none"></rect>
+                    <rect ng-style="{ stroke: config.TextColor, fill: config.BackgroundColor }" ng-attr-width="{{::cursor.timeWidth}}" height="12"></rect>
+                    <text ng-style="{ fill: config.TextColor }" ng-attr-x="{{::cursor.timeWidth_2}}" y="10">{{cursor.time}}</text>
+                </g>
+                <g>
+                    <g ng-repeat="callout in cursor.callouts track by $index" ng-class="['trend-cursor-callout', traceColor(callout.palIndex)]" ng-style="{ color: traceProperty('Color', callout.traceIndex) }">
+                        <rect ng-style="{ fill: config.BackgroundColor }" ng-attr-x="{{callout.x}}" ng-attr-y="{{callout.y - callout.height}}" ng-attr-height="{{callout.height}}" ng-attr-width="{{callout.width}}"></rect>
+                        <text ng-style="{ fill: config.TextColor }" ng-attr-x="{{callout.x + 2}}" ng-attr-y="{{callout.y - 3}}">{{callout.value}} {{callout.units}}</text>
+                    </g>
+                </g>
+            </g>
+
+            <g class="rubberband-zoom" ng-if="zooming()">
+                <rect class="rubberband" ng-attr-x="{{rubberBandLeft()}}" ng-attr-y="{{rubberBandTop()}}" ng-attr-width="{{rubberBandWidth()}}" ng-attr-height="{{rubberBandHeight()}}" 
+                      style="fill-opacity: 0" ng-style="{ 'stroke' : config.TextColor || '#ffffff' }" ></rect>
+            </g>
+        </g>
+    </svg>    
+
+    <div class="trend-legend-splitter" ng-show="trendModel.showLegend" ng-mousedown="beginSplitterMove($event)"> </div>
+
+    <div ng-if="trendModel.showLegend" 
+         class="trend-legend-container t-trend-background" 
+         ng-style="{ width:trendModel.config.legend.width, 'background-color': config.BackgroundColor }"
+         pv-touchend="legendResizer.onLegendEnter($event)" ng-mouseenter="legendResizer.onLegendEnter($event)" ng-mouseleave="legendResizer.onLegendLeave($event)">
+
+        <table class="trend-legend" 
+               ng-class="{'scroll-legend':legendResizer.showScrollbars, 'trend-legend-layoutmode':!legendResizer.showScrollbars}" 
+               ng-style="{height:position.height}">
+
+            <tr ng-repeat="legend in trendModel.legend track by $index" 
+                class="trend-legend-item {{traceColor(legend.palIndex)}}" 
+                ng-class="legendItemClass($index)"
+                ng-style="{ color: traceProperty('Color', legend.traceIndex) }"
+                ng-click="onClickLegendItem($index)"
+                data-index="{{$index}}">
+
+                <td>
+                    <table title="{{legend.labelWithPath}}">
+                        <tr>
+                            <td>
+                                <text ng-bind="legend.label"></text>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <text ng-if="!isTraceHidden($index)" ng-class="{'trend-legend-disabled-value':gesturing}">{{legend.value}} {{legend.units}}</text>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
